@@ -609,6 +609,7 @@ function update()
 				yGrids:[],
 				//by default
 				_gridsOn:false,
+				_rotation:{x:0,y:0,z:0},
 				_numberOfXLabels:9,
 				_numberOfYLabels:9,
 				_width:100,
@@ -632,8 +633,8 @@ function update()
 
 
 			}else{
-				for (var i = 0; i < chart.parts.length; i++) {
-					_chart.dashBoard.scene.add(chart.parts[i]);
+				for (var i = 0; i < _chart.parts.length; i++) {
+					_chart.dashBoard.scene.add(_chart.parts[i]);
 				}
 
 			}
@@ -800,7 +801,7 @@ function update()
 	                                            	           shading : THREE.SmoothShading
 			      } );
 			      var geometry = new THREE.TextGeometry( txt, {
-			        size: 8,
+			        size: mesh.parentChart._height/10,
 			        height: 2,
 			        curveSegments: 3,
 			        font: "helvetiker",
@@ -813,7 +814,7 @@ function update()
 			      dashBoard.textLabel.position.z = mesh.position.z;
 			      dashBoard.textLabel.position.x = mesh.position.x;
 			      dashBoard.textLabel.position.y = _chart._height+10+_chart.coords.y;
-			      //textLabel.rotation.set(3*Math.PI/2,0,0);
+			      dashBoard.textLabel.rotation.set(mesh.parentChart._rotation.x,mesh.parentChart._rotation.y,mesh.parentChart._rotation.z);
 			      dashBoard.scene.add(dashBoard.textLabel);
 			}
 
@@ -1272,6 +1273,16 @@ function update()
 	    		return;
 	    	}
 	    	_chart._id=id;
+	    	return _chart;
+	    }
+
+	    //rotation-> {x:,y:,z}
+	    _chart.rotation=function(rotationObject){
+	    	if(!arguments.length){
+	    		console.log('argument needed');
+	    		return;
+	    	}
+	    	_chart._rotation=rotationObject;
 	    	return _chart;
 	    }
 
@@ -1740,8 +1751,8 @@ function update()
 		var _chart = THREEDC.baseMixin({});
 				//by default
 		_chart._radius=50;
-		_chart._width=_chart._radius;
-		_chart._height=_chart._radius;
+		_chart._width=_chart._radius*2;
+		_chart._height=_chart._radius*2;
 		//by default
 		_chart._depth=5;
 		_chart._opacity=0.8;
@@ -1751,9 +1762,8 @@ function update()
 		
 		_chart.radius=function(radius){
 			_chart._radius=radius;
-			_chart._radius=radius;
-			_chart._width=radius;
-			_chart._height=radius;
+			_chart._width=radius*2;
+			_chart._height=radius*2;
 			return _chart;
 		}
 
@@ -1843,7 +1853,7 @@ function update()
 				var piePart = new THREE.Mesh( geometry, material );
 				piePart.material.color.setHex(origin_color);
 				piePart.origin_color=origin_color;
-				//piePart.rotation.set(0,0,0);
+				piePart.rotation.set(_chart._rotation.x,_chart._rotation.y,_chart._rotation.z);
 				piePart.position.set(_chart.coords.x+_chart._radius,_chart.coords.y+_chart._radius,_chart.coords.z);
 				piePart.name ="key:"+_data[i].key+" value:"+_data[i].value;
 				piePart.data={
@@ -1923,6 +1933,7 @@ function update()
 				var bar = new THREE.Mesh(geometry, material);
 				bar.origin_color=origin_color;
 				bar.position.set(x+_chart.coords.x,y+_chart.coords.y,_chart.coords.z+_chart._depth/2);
+				bar.rotation.set(_chart._rotation.x,_chart._rotation.y,_chart._rotation.z);
 				bar.name = "key:"+_data[i].key+" value: "+_data[i].value;
 				bar.data={
 					key:_data[i].key,
