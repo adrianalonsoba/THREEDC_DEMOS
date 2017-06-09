@@ -254,8 +254,8 @@ function init () {
    // CAMERA //
    ////////////
    // set the view size in pixels (custom or according to window size)
-   var SCREEN_WIDTH = window.innerWidth;
-   var SCREEN_HEIGHT = window.innerHeight;
+   var SCREEN_WIDTH = sceneDIV.clientWidth;
+   var SCREEN_HEIGHT =sceneDIV.clientHeight;
    // camera attributes
    var VIEW_ANGLE = 45;
    var ASPECT = SCREEN_WIDTH / SCREEN_HEIGHT;
@@ -884,6 +884,29 @@ function update()
 
 	    	_chart.renderGrids();
 
+    		if (_chart._gridColor) {addGridBox()};
+
+
+	    	function addGridBox () {
+				var material = new THREE.MeshPhongMaterial( {
+														   color:_chart._gridColor || 0x0000ff,
+				                                           specular: 0x999999,
+				                                           shininess: 100,
+				                                           shading : THREE.SmoothShading,
+				                                           opacity:0.6,
+				                                           transparent: true
+				} );
+
+				var geometryXY = new THREE.CubeGeometry( _chart._width, _chart._height, 0.0001);
+
+
+				var boxXY=new THREE.Mesh(geometryXY, material);
+				boxXY.position.set(_chart.coords.x+_chart._width/2,_chart.coords.y+_chart._height/2,_chart.coords.z);
+				//scene.add(boxXY);
+				//_chart.xGrids.push(boxXY);
+				_chart.threeGroup.add(boxXY);
+	    	}
+
 	    	function putXGrid (step) {
 
 				var verticalGeometry = new THREE.Geometry();
@@ -1122,9 +1145,47 @@ function update()
 			for (var i = 1; i < _chart._data.length; i++) {
 				if (_chart._data[i].key2.length > topZvalue.length) topZvalue=_chart._data[i].key2;
 			};
-			console.log(topZvalue);
 			return topZvalue;
 		}
+
+
+		_chart.renderTitle=function() {
+			var txt = _chart._title;
+			var material = new THREE.MeshPhongMaterial( {color: _chart._color,
+			                                    	     specular: 0x999999,
+			                                    	     shininess: 100,
+			                                    	     shading : THREE.SmoothShading,
+			                                       	     opacity:_chart._opacity,
+			                                   		     transparent: true
+			} );
+			var geometry = new THREE.TextGeometry( txt, {
+			  size: _chart._height/10,
+			  height: _chart._depth,
+			  curveSegments: 3,
+			  font: "helvetiker",
+			  weight: "bold",
+			  style: "normal",
+			  bevelEnabled: false
+			});
+
+			var chartTitle = new THREE.Mesh( geometry, material );
+			_chart.title=chartTitle;
+
+			chartTitle.position.x = _chart.coords.x;
+			chartTitle.position.y = _chart.coords.y-_chart._height/5;
+			chartTitle.position.z = _chart.coords.z;
+
+			_chart.threeGroup.add(chartTitle);
+
+			return _chart;
+		}
+
+
+		_chart.removeTitle=function() {
+			_chart.threeGroup.remove(_chart.title);
+			return _chart;
+		}
+
 
 
 	    _chart.getTopValue2=function() {
@@ -1137,6 +1198,7 @@ function update()
 		}
 
 		_chart.sortCFData=function() {
+			/*
 		    var unsort_data=_chart._group.top(Infinity);
 
 			var dates=[];
@@ -1158,6 +1220,8 @@ function update()
 					}
 				};
 			};
+			*/
+			_data=_chart._group.all();
 
 			return _data;
 		}
@@ -1293,6 +1357,14 @@ function update()
 	    	return _chart;
 	    }
 
+	    _chart.setTitle=function(title){
+	    	if(!arguments.length){
+	    		console.log('argument needed');
+	    		return;
+	    	}
+	    	_chart._title=title;
+	    	return _chart;
+	    }
 
 		return _chart;
 
@@ -1843,7 +1915,7 @@ function update()
 
 			var  extrudeOpts = {curveSegments:curveSegments,
 								amount: _chart._depth,
-								bevelEnabled: true,
+								bevelEnabled: false,
 								bevelSegments: 4,
 								steps: 2,
 								bevelSize: 1,
@@ -1881,7 +1953,7 @@ function update()
 				piePart.material.color.setHex(origin_color);
 				piePart.origin_color=origin_color;
 				piePart.position.set(_chart.coords.x+_chart._radius,_chart.coords.y+_chart._radius,_chart.coords.z);
-				piePart.name ="key:"+_data[i].key+" value:"+_data[i].value;
+				piePart.name ="key: "+_data[i].key+" value: "+_data[i].value;
 				piePart.data={
 					key:_data[i].key,
 					value:_data[i].value
@@ -1893,6 +1965,8 @@ function update()
 			}
 
 			_chart.addEvents();
+			if(_chart._title) _chart.renderTitle();
+
 	    }
 
 		return _chart;
@@ -1961,7 +2035,7 @@ function update()
 				bar.origin_color=origin_color;
 				bar.position.set(x+_chart.coords.x,y+_chart.coords.y,_chart.coords.z+_chart._depth/2);
 				//bar.rotation.set(_chart._rotation.x,_chart._rotation.y,_chart._rotation.z);
-				bar.name = "key:"+_data[i].key+" value: "+_data[i].value;
+				bar.name = "key: "+_data[i].key+" value: "+_data[i].value;
 				bar.data={
 					key:_data[i].key,
 					value:_data[i].value
@@ -1976,6 +2050,7 @@ function update()
 		    _chart.addEvents();
 		    _chart.addLabels();
 			if (_chart._gridsOn) _chart.addGrids();
+			if(_chart._title) _chart.renderTitle();
 	    }
 
 	    return _chart;
@@ -2021,7 +2096,7 @@ function update()
 			console.log('dimension',_chart._dimension.top(1));
 			console.log('group',_chart._group.top(1));
 			var uData=_chart._group.top(1);
-			console.log(uData[0].value.length);
+			console.log(uData[0].key);
 
 			//_chart._data[0].key1=_chart._group.top(1).key;
 
@@ -2070,15 +2145,17 @@ function update()
 		            var bar = new THREE.Mesh(geometry, material);
 		            bar.origin_color=origin_color;
 		            bar.position.set(stepX+_chart.coords.x,y+_chart.coords.y,stepZ+_chart.coords.z);
-		            bar.name = "key1:"+_chart._data[dataPos].key1+" key2:"+_chart._data[dataPos].key2+" value: "+_chart._data[dataPos].value;
+		            bar.name = "key1: "+_chart._data[dataPos].key1+" key2: "+_chart._data[dataPos].key2+" value: "+_chart._data[dataPos].value;
 		            bar.data={
 		            	key1:_chart._data[dataPos].key1,
 		            	key2:_chart._data[dataPos].key2,
 		            	value:_chart._data[dataPos].value
 		            };
 		            bar.parentChart=_chart;
-		            _chart.parts.push(bar);
-		            _chart.threeGroup.add(bar);
+		            if (_chart._data[dataPos].value!=0) {
+			             _chart.parts.push(bar);
+		           		 _chart.threeGroup.add(bar);
+		            }
 					 stepX+=_chart._width/numberOfKeys1.length;
 		   			dataPos++;
 		   		};
@@ -2087,6 +2164,8 @@ function update()
 		    _chart.addEvents();
 		    _chart.addLabels();
 			if (_chart._gridsOn) _chart.addGrids();
+			if(_chart._title) _chart.renderTitle();
+
 		}
 
 		return _chart;
@@ -2215,7 +2294,7 @@ function update()
 			location=[0,0,0];
 		}
 
-		var _chart = dashBoard.baseMixin({});
+		var _chart = THREEDC.baseMixin({});
 		if(location.isPanel){
 			for (var i = 0; i < location.anchorPoints.length; i++) {
 				if(!location.anchorPoints[i].filled){
@@ -2281,9 +2360,11 @@ function update()
 		    text3D = new THREE.Mesh( geometry, material );
 		    text3D.origin_color=origin_color;
     		text3D.position.copy(_chart.coords);
-	      	_chart.parts.push(text3D);
-			
-			_chart.addEvents();
+	      	//_chart.parts.push(text3D);
+	      	//_chart.threeGroup.add(text3D);
+			_chart.dashBoard.scene.add(text3D);
+			_chart.mesh=text3D;
+
 	    }
 
 	    return _chart;
@@ -2353,7 +2434,7 @@ function update()
 					lineShape.lineTo( 0, 0 );
 					var extrusionSettings = {curveSegments:1,
 					 						 amount: _chart._depth,
-					 						 bevelEnabled: true,
+					 						 bevelEnabled: false,
 					 						 bevelSegments: 4,
 					 						 steps: 2,
 					 						 bevelSize: 1,
@@ -2370,7 +2451,7 @@ function update()
 					var linePart = new THREE.Mesh( charGeometry, material );
 					linePart.origin_color=origin_color;
 					linePart.position.set(x+_chart.coords.x,_chart.coords.y,_chart.coords.z);
-					linePart.name="key:"+_data[i].key+" value: "+_data[i].value;
+					linePart.name="key: "+_data[i].key+" value: "+_data[i].value;
 					linePart.data={
 						key:_data[i].key,
 						value:_data[i].value
@@ -2385,6 +2466,8 @@ function update()
 			_chart.addEvents();
 			_chart.addLabels();
 			if (_chart._gridsOn) _chart.addGrids();
+			if(_chart._title) _chart.renderTitle();
+
 
 
 	    }
@@ -2464,6 +2547,8 @@ function update()
 			_chart.addEvents();
 			_chart.addLabels();
 			if (_chart._gridsOn) _chart.addGrids();
+			if(_chart._title) _chart.renderTitle();
+
 	    }
 
 	    return _chart;
@@ -2538,7 +2623,7 @@ function update()
 			            bubble.origin_color=origin_color;
 			            y=(_chart._height*_chart._data[dataPos].value)/topValue;
 			            bubble.position.set(stepX+_chart.coords.x,y+_chart.coords.y,stepZ+_chart.coords.z);
-			            bubble.name = "key1:"+_chart._data[dataPos].key1+" key2:"+_chart._data[dataPos].key2+" value: "+_chart._data[dataPos].value+" value2: "+_chart._data[dataPos].value2;
+			            bubble.name = "key1 :"+_chart._data[dataPos].key1+" key2: "+_chart._data[dataPos].key2+" value: "+_chart._data[dataPos].value+" value2: "+_chart._data[dataPos].value2;
 			            bubble.data={
 			            	key1:_chart._data[dataPos].key1,
 			            	key2:_chart._data[dataPos].key2,
@@ -2559,6 +2644,8 @@ function update()
 		    _chart.addEvents();
 		    _chart.addLabels();
 			if (_chart._gridsOn) _chart.addGrids();
+			if(_chart._title) _chart.renderTitle();
+
 
 		}
 
