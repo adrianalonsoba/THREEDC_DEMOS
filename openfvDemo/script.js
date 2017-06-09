@@ -115,33 +115,52 @@ $.getJSON("../jsons/opnfv-commits.json", function (data) {
     var dimAuthors = cf.dimension(function (p) { return p.Author_name; });
     var groupAuth = dimAuthors.group();
 
+    var orgs = groupByOrg.top(Infinity);
+    var mydata = grouporgWeek.all();
+    var data1 = [];
+    var findorg = function (d) { return d.key === orgs[j].key; };
+    for (var i = 0 ; i < mydata.length; i++) {
+        for (var j = 0; j < orgs.length; j++) {
+            var found = mydata[i].value.find(findorg);
+            if (found) {
+                data1.push({ key1: mydata[i].key, key2: found.key, value: found.value });
+            } else {
+                data1.push({ key1: mydata[i].key, key2: orgs[j].key, value: 0 });
+            }
+        }
+    }
+
 
 	var myDashBoard = THREEDC.dashBoard(scenediv);
+    window.scene=myDashBoard.scene;
 
 	var myPieChart= THREEDC.pieChart();
 
 	var mybarchartTzs=THREEDC.barsChart();
 
     var mybarchart3d = THREEDC.TDbarsChart();
+    var mybubblechart=THREEDC.bubbleChart();
+
+
 
 	myPieChart.dimension(dimByOrg).group(groupByOrg).rotation({x:0,y:45,z:0});
 
 	mybarchartTzs.dimension(dimbytz).group(groupbytz).rotation({x:0,y:-45,z:0}).gridsOn().width(200).color(0xff80ff);
 
-    mybarchart3d.dimension(dimbyYandQ).group(grouporgWeek).gridsOn();
+    mybarchart3d.data(data1).gridsOn();
 
 	myDashBoard.addChart(myPieChart);
 
 	myDashBoard.addChart(mybarchartTzs,{x:100,y:0,z:0});
 
-    myDashBoard.addChart(mybarchart3d,{x:-100,y:0,z:0})
+    myDashBoard.addChart(mybarchart3d,{x:-100,y:0,z:0});
 
 
 
 
-	var imagePrefix = "../../examples/Three.js/images/dawnmountain-";
+	var imagePrefix = "../../examples/Three.js/images/DarkSea-";
 	var directions  = ["xpos", "xneg", "ypos", "yneg", "zpos", "zneg"];
-	var imageSuffix = ".png";
+	var imageSuffix = ".jpg";
 	var skyGeometry = new THREE.CubeGeometry( 5000, 5000, 5000 );	
 	
 	var materialArray = [];
@@ -155,7 +174,68 @@ $.getJSON("../jsons/opnfv-commits.json", function (data) {
 	myDashBoard.scene.add( skyBox );
 
 
+    var obj = { Clear:function(){ clearFilters(); }};
+
+    myDashBoard.gui.add(obj,'Clear').name('Clear filters');
+
+    function clearFilters() {
+        dimByOrg.filterAll();
+        dimbytz.filterAll();
+        dimbyYandQ.filterAll();
+        for (var i = 0; i < myDashBoard.charts.length; i++) {
+            myDashBoard.charts[i].reBuild();
+        }
+    }
+
+
 
  }
 
 
+
+/*
+//BARS
+        var mydata = grouporgWeek.all();
+        var data1 = [];
+        var findorg = function (d) { return d.key === orgs[j].key; };
+        for (var i = 0 ; i < mydata.length; i++) {
+            for (var j = 0; j < orgs.length; j++) {
+                var found = mydata[i].value.find(findorg);
+                if (found) {
+                    data1.push({ key1: mydata[i].key, key2: found.key, value: found.value });
+                } else {
+                    data1.push({ key1: mydata[i].key, key2: orgs[j].key, value: 0 });
+                }
+            }
+        }
+      
+
+        mybarchart3d
+            .data(data1);
+
+
+//BUBBLES
+
+        var mydata = grouporgWeek.all();
+        var data1 = [];
+        var findorg = function (d) { return d.key === orgs[j].key; };
+        for (var i = 0 ; i < mydata.length; i++) {
+            for (var j = 0; j < orgs.length; j++) {
+                var found = mydata[i].value.authors.find(findorg);
+                if (found) {
+                    data1.push({ key1: mydata[i].key, key2: found.key, value: found.value.commits ,value2:found.value.commits/mydata[i].value.totalCommits});
+                } else {
+                    data1.push({ key1: mydata[i].key, key2: orgs[j].key, value: 0,value2:0 });
+                }
+            }
+        }
+        console.log(data1);
+        mybubblechart
+            .data(data1)
+            .width(10)
+            .depth(7)
+            .height(6)
+            .setTitle("contribution by company ");
+
+
+*/
