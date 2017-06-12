@@ -537,7 +537,7 @@ function init(data) {
 
 function update()
 {
-  // controls.update();
+   controls.update();
  // myDashBoard.controls.update();
   //stats.update();
 }
