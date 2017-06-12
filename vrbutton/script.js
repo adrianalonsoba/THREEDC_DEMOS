@@ -46,7 +46,7 @@ function init(data) {
     document.body.appendChild( container );
 
     camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 1, 100000 );
-    camera.position.set(0,150,800);
+    camera.position.set(0,50,150);
 
     scene = new THREE.Scene();
 
@@ -537,7 +537,7 @@ function init(data) {
 
 function update()
 {
-    controls.update();
+  // controls.update();
  // myDashBoard.controls.update();
   //stats.update();
 }
